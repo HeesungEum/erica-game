@@ -372,6 +372,70 @@
   @media (max-width:480px){
     .photo-card{ flex-direction:column; align-items:flex-start; }
   }
+
+  .replant-btn{
+    margin-top:2px;
+    background:none; border:none; padding:5px 10px;
+    font-family:inherit; font-size:.76rem; color:var(--ink-faint);
+    text-decoration:underline; text-underline-offset:2px;
+    cursor:pointer;
+  }
+  .replant-btn:hover{ color:var(--heather-600); }
+
+  .gift-card{
+    padding: 20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    animation: photoReveal .6s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .gift-card{ animation:none; }
+  }
+  .gift-head{ display:flex; flex-direction:column; gap:3px; }
+  .gift-head h2{ font-family:"Fraunces", serif; font-weight:600; font-size:1.05rem; color:var(--ink); }
+  .gift-sub{ margin:0; font-size:.82rem; color:var(--ink-soft); line-height:1.5; }
+
+  .field-row{ display:flex; flex-direction:column; gap:5px; }
+  .field-row label{ font-size:.78rem; font-weight:600; color:var(--ink-soft); }
+  .field-row input{
+    padding:10px 12px; border-radius:10px;
+    border:1px solid var(--card-line);
+    background:var(--bg-soft); color:var(--ink);
+    font-family:inherit; font-size:.9rem;
+    width:100%;
+  }
+  .field-row input::placeholder{ color:var(--ink-faint); }
+  .field-row input:focus-visible{ outline:2px solid var(--focus); outline-offset:1px; }
+  .field-row input[readonly]{ color:var(--ink-soft); }
+
+  .address-row{ display:flex; gap:8px; }
+  .address-row input{ flex:1; min-width:0; }
+  .btn-address{
+    flex:0 0 auto;
+    padding:0 16px; border-radius:10px;
+    border:1px solid var(--card-line);
+    background:var(--card); color:var(--heather-600);
+    font-family:inherit; font-weight:600; font-size:.84rem;
+    cursor:pointer; white-space:nowrap;
+  }
+  .btn-address:hover{ background:var(--heather-100); }
+
+  .gift-submit{
+    margin-top:2px;
+    padding:12px 16px; border-radius:12px; border:none;
+    background: var(--heather-600); color:#fff;
+    font-family:inherit; font-weight:700; font-size:.92rem;
+    cursor:pointer;
+  }
+  .gift-submit:hover{ background:var(--heather-700); }
+
+  .gift-hint{ margin:0; font-size:.8rem; color:var(--ink-soft); min-height:1.3em; }
+  .gift-hint.attn{ color:var(--warn); font-weight:600; }
+  .gift-privacy{
+    margin:0; font-size:.72rem; color:var(--ink-faint); line-height:1.6;
+    border-top:1px solid var(--card-line); padding-top:12px;
+  }
 </style>
 </head>
 <body>
@@ -404,6 +468,7 @@
       </div>
       <p class="stage-label" id="stageLabel">씨앗</p>
       <p class="day-count" id="dayCount">1일째 함께하는 중</p>
+      <button class="replant-btn" id="btnReplant" type="button" hidden>새로 심기 ↺</button>
     </section>
 
     <section class="care-card" aria-label="ERICA 돌보기">
@@ -473,6 +538,46 @@
     </div>
   </section>
 
+  <section class="gift-card" id="giftCard" aria-label="만개 기념품 신청" hidden>
+    <div class="gift-head">
+      <h2>ERICA 만개 기념품을 보내드려요</h2>
+      <p class="gift-sub">만개까지 키워주셔서 감사해요. 받으실 분 정보를 입력해주시면 작은 기념품을 보내드릴게요.</p>
+    </div>
+
+    <form id="giftForm">
+      <div class="field-row">
+        <label for="giftName">성명</label>
+        <input id="giftName" name="giftName" type="text" autocomplete="name" placeholder="홍길동" required />
+      </div>
+      <div class="field-row" style="margin-top:10px">
+        <label for="giftPhone">연락처</label>
+        <input id="giftPhone" name="giftPhone" type="tel" autocomplete="tel" placeholder="010-1234-5678" required />
+      </div>
+      <div class="field-row" style="margin-top:10px">
+        <label for="giftEmail">이메일</label>
+        <input id="giftEmail" name="giftEmail" type="email" autocomplete="email" placeholder="name@example.com" />
+      </div>
+      <div class="field-row" style="margin-top:10px">
+        <label for="giftZip">주소</label>
+        <div class="address-row">
+          <input id="giftZip" name="giftZip" type="text" placeholder="우편번호" readonly required />
+          <button class="btn-address" id="btnAddressSearch" type="button">주소 검색</button>
+        </div>
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <input id="giftAddr1" name="giftAddr1" type="text" placeholder="기본 주소" readonly required aria-label="기본 주소" />
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <input id="giftAddr2" name="giftAddr2" type="text" placeholder="상세 주소 (동/호수 등)" aria-label="상세 주소" />
+      </div>
+
+      <button class="gift-submit" id="btnGiftSubmit" type="submit" style="margin-top:14px;width:100%">기념품 신청 메일 보내기</button>
+      <p class="gift-hint" id="giftHint" aria-live="polite"></p>
+    </form>
+
+    <p class="gift-privacy">입력하신 정보는 기념품 발송 목적으로만 사용돼요. "신청 메일 보내기"를 누르면 이 정보가 담긴 이메일이 작성되며, 본인의 메일 앱에서 직접 보내기를 눌러야 실제로 전송됩니다 — 저장·전송은 서버가 아닌 사용자의 메일 앱을 통해 이루어져요.</p>
+  </section>
+
   <section class="notes-card" aria-label="에리카 식물 정보">
     <button class="notes-toggle" id="notesToggle" aria-expanded="false" aria-controls="notesBody">
       에리카 식물도감
@@ -528,12 +633,17 @@
     feedDesc: $("feedDesc"), waterDesc: $("waterDesc"), sunDesc: $("sunDesc"),
     hint: $("hintText"), live: $("liveRegion"),
     notesToggle: $("notesToggle"), notesBody: $("notesBody"),
-    themeToggle: $("themeToggle"), photoCard: $("realPhotoCard")
+    themeToggle: $("themeToggle"), photoCard: $("realPhotoCard"),
+    btnReplant: $("btnReplant"), giftCard: $("giftCard"), giftForm: $("giftForm"),
+    giftName: $("giftName"), giftPhone: $("giftPhone"), giftEmail: $("giftEmail"),
+    giftZip: $("giftZip"), giftAddr1: $("giftAddr1"), giftAddr2: $("giftAddr2"),
+    btnAddressSearch: $("btnAddressSearch"), giftHint: $("giftHint")
   };
 
   var WATER_COOLDOWN_MS = 60 * 1000;
   var SUN_COOLDOWN_MS = 60 * 1000;
   var FEED_COOLDOWN_MS = 2 * 60 * 1000;
+  var GIFT_RECIPIENT_EMAIL = "hseum@hanyang.ac.kr";
 
   function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
 
@@ -805,6 +915,8 @@
     els.sunDesc.textContent = sunOnCooldown ? (Math.ceil(sunRemain/1000) + "초 후 가능") : (sunFull ? "가득 참" : "+22");
 
     if(els.photoCard){ els.photoCard.hidden = stage !== 5; }
+    if(els.giftCard){ els.giftCard.hidden = stage !== 5; }
+    if(els.btnReplant){ els.btnReplant.hidden = stage !== 5; }
 
     updateHint(stage);
     saveState();
@@ -851,6 +963,119 @@
     els.notesToggle.setAttribute("aria-expanded", String(!expanded));
     els.notesBody.hidden = expanded;
   });
+
+  // ---------- replant ----------
+  els.btnReplant.addEventListener("click", function(){
+    var ok = window.confirm("지금까지 키운 ERICA를 새로 심을까요? 성장 기록이 모두 초기화돼요.");
+    if(!ok) return;
+    state = {
+      water: 70, sun: 70, growth: 0,
+      startTs: Date.now(), lastTs: Date.now(),
+      feedReadyTs: 0, waterReadyTs: 0, sunReadyTs: 0, lastStage: 0
+    };
+    lastRenderedStage = -1;
+    if(els.giftForm) els.giftForm.reset();
+    if(els.giftHint) els.giftHint.textContent = "";
+    announce("ERICA를 새로 심었어요.");
+    render();
+  });
+
+  // ---------- address search (Daum/Kakao Postcode) ----------
+  var postcodeState = "idle"; // idle | loading | ready | failed
+  function loadPostcodeScript(cb){
+    if(window.daum && window.daum.Postcode){ postcodeState = "ready"; cb(true); return; }
+    if(postcodeState === "failed"){ cb(false); return; }
+    postcodeState = "loading";
+    var settled = false;
+    var s = document.createElement("script");
+    s.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    s.onload = function(){
+      if(settled) return;
+      settled = true;
+      postcodeState = (window.daum && window.daum.Postcode) ? "ready" : "failed";
+      cb(postcodeState === "ready");
+    };
+    s.onerror = function(){
+      if(settled) return;
+      settled = true;
+      postcodeState = "failed";
+      cb(false);
+    };
+    document.head.appendChild(s);
+    setTimeout(function(){
+      if(settled) return;
+      settled = true;
+      postcodeState = (window.daum && window.daum.Postcode) ? "ready" : "failed";
+      cb(postcodeState === "ready");
+    }, 4000);
+  }
+
+  function openPostcodePopup(){
+    new window.daum.Postcode({
+      oncomplete: function(data){
+        els.giftZip.value = data.zonecode || "";
+        els.giftAddr1.value = data.roadAddress || data.jibunAddress || "";
+        els.giftAddr2.focus();
+      }
+    }).open();
+  }
+
+  if(els.btnAddressSearch){
+    els.btnAddressSearch.addEventListener("click", function(){
+      // window.open() inside the postcode library must run synchronously
+      // within this click, so it only works if the script already loaded.
+      if(window.daum && window.daum.Postcode){
+        els.giftHint.classList.remove("attn");
+        els.giftHint.textContent = "";
+        openPostcodePopup();
+        return;
+      }
+      els.giftZip.readOnly = false;
+      els.giftAddr1.readOnly = false;
+      els.giftHint.classList.remove("attn");
+      els.giftHint.textContent = "주소 검색을 준비하는 중이에요. 잠시 후 다시 눌러보시거나, 우편번호와 주소를 직접 입력해주세요.";
+      loadPostcodeScript(function(){});
+    });
+  }
+
+  // warm up the address-search script early so the popup can open
+  // synchronously on click (browsers block window.open from async callbacks)
+  loadPostcodeScript(function(){});
+
+  // ---------- gift form submit ----------
+  if(els.giftForm){
+    els.giftForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var name = els.giftName.value.trim();
+      var phone = els.giftPhone.value.trim();
+      var email = els.giftEmail.value.trim();
+      var zip = els.giftZip.value.trim();
+      var addr1 = els.giftAddr1.value.trim();
+      var addr2 = els.giftAddr2.value.trim();
+
+      if(!name || !phone || !addr1){
+        els.giftHint.classList.add("attn");
+        els.giftHint.textContent = "성명, 연락처, 주소는 꼭 입력해주세요.";
+        return;
+      }
+
+      var subject = "[ERICA 만개 기념품 신청] " + name;
+      var bodyLines = [
+        "성명: " + name,
+        "연락처: " + phone,
+        "이메일: " + (email || "-"),
+        "우편번호: " + (zip || "-"),
+        "주소: " + addr1 + (addr2 ? " " + addr2 : "")
+      ];
+      var mailto = "mailto:" + GIFT_RECIPIENT_EMAIL +
+        "?subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(bodyLines.join("\n"));
+
+      window.location.href = mailto;
+      els.giftHint.classList.remove("attn");
+      els.giftHint.textContent = "메일 앱이 열렸어요. 내용을 확인하고 보내기를 눌러 완료해주세요.";
+    });
+  }
 
   function applyTheme(mode){
     if(mode === "light" || mode === "dark"){
