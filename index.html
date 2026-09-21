@@ -340,6 +340,38 @@
   @media (prefers-reduced-motion: reduce){
     .petal{ animation: none; opacity:0; }
   }
+
+  .photo-card{
+    padding: 18px;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    animation: photoReveal .6s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .photo-card{ animation:none; }
+  }
+  @keyframes photoReveal{
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .photo-wrap{ flex:0 0 auto; }
+  .photo-wrap img{
+    width:110px; height:auto; display:block;
+    border-radius:14px;
+    box-shadow: 0 8px 20px -12px var(--shadow);
+  }
+  .photo-caption{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .photo-eyebrow{
+    margin:0; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    color: var(--heather-600); font-weight:700;
+  }
+  .photo-title{ margin:0; font-family:"Fraunces", serif; font-weight:600; font-size:1.02rem; color:var(--ink); }
+  .photo-credit{ margin:0; font-size:.74rem; color:var(--ink-faint); line-height:1.5; }
+  .photo-credit a{ color:var(--ink-soft); }
+  @media (max-width:480px){
+    .photo-card{ flex-direction:column; align-items:flex-start; }
+  }
 </style>
 </head>
 <body>
@@ -412,12 +444,12 @@
         <button id="btnWater" type="button">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s6.5 7.6 6.5 12.2A6.5 6.5 0 1 1 5.5 14.2C5.5 9.6 12 2 12 2Z"/></svg>
           물 주기
-          <span class="desc">+22</span>
+          <span class="desc" id="waterDesc">+22</span>
         </button>
         <button id="btnSun" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M4.5 4.5l1.5 1.5M18 18l1.5 1.5M3 12h2M19 12h2M4.5 19.5L6 18M18 6l1.5-1.5" stroke-linecap="round"/></svg>
           햇빛 쬐기
-          <span class="desc">+22</span>
+          <span class="desc" id="sunDesc">+22</span>
         </button>
         <button id="btnFeed" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M4 12h16" stroke-linecap="round"/><circle cx="12" cy="12" r="8.5"/></svg>
@@ -429,6 +461,17 @@
       <p class="hint" id="hintText" aria-live="polite"></p>
     </section>
   </div>
+
+  <section class="photo-card" id="realPhotoCard" aria-label="실제 에리카 사진" hidden>
+    <div class="photo-wrap">
+      <img src="erica-real-photo.jpg" alt="실제로 핀 에리카(Erica cinerea, 벨헤더) 꽃 사진" width="110" height="171" loading="lazy" />
+    </div>
+    <div class="photo-caption">
+      <p class="photo-eyebrow">ERICA가 만개했어요</p>
+      <p class="photo-title">실제 에리카는 이런 모습이에요</p>
+      <p class="photo-credit">벨헤더(Erica cinerea) · 사진: Gwen and James Anderson · <a href="https://commons.wikimedia.org/wiki/File:Bell_Heather_-_geograph.org.uk_-_493968.jpg" target="_blank" rel="noopener noreferrer">CC BY-SA 2.0, Wikimedia Commons</a></p>
+    </div>
+  </section>
 
   <section class="notes-card" aria-label="에리카 식물 정보">
     <button class="notes-toggle" id="notesToggle" aria-expanded="false" aria-controls="notesBody">
@@ -482,10 +525,15 @@
     waterFill: $("waterFill"), sunFill: $("sunFill"), growthFill: $("growthFill"),
     stageLabel: $("stageLabel"), dayCount: $("dayCount"),
     btnWater: $("btnWater"), btnSun: $("btnSun"), btnFeed: $("btnFeed"),
-    feedDesc: $("feedDesc"), hint: $("hintText"), live: $("liveRegion"),
+    feedDesc: $("feedDesc"), waterDesc: $("waterDesc"), sunDesc: $("sunDesc"),
+    hint: $("hintText"), live: $("liveRegion"),
     notesToggle: $("notesToggle"), notesBody: $("notesBody"),
-    themeToggle: $("themeToggle")
+    themeToggle: $("themeToggle"), photoCard: $("realPhotoCard")
   };
+
+  var WATER_COOLDOWN_MS = 60 * 1000;
+  var SUN_COOLDOWN_MS = 60 * 1000;
+  var FEED_COOLDOWN_MS = 2 * 60 * 1000;
 
   function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
 
@@ -503,7 +551,7 @@
     var fallback = {
       water: 70, sun: 70, growth: 0,
       startTs: Date.now(), lastTs: Date.now(),
-      feedReadyTs: 0, lastStage: 0
+      feedReadyTs: 0, waterReadyTs: 0, sunReadyTs: 0, lastStage: 0
     };
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -743,8 +791,20 @@
     } else {
       els.feedDesc.textContent = "성장 +10";
     }
-    els.btnWater.disabled = state.water >= 100;
-    els.btnSun.disabled = state.sun >= 100;
+
+    var waterRemain = state.waterReadyTs - now;
+    var waterOnCooldown = waterRemain > 0;
+    var waterFull = state.water >= 100;
+    els.btnWater.disabled = waterOnCooldown || waterFull;
+    els.waterDesc.textContent = waterOnCooldown ? (Math.ceil(waterRemain/1000) + "초 후 가능") : (waterFull ? "가득 참" : "+22");
+
+    var sunRemain = state.sunReadyTs - now;
+    var sunOnCooldown = sunRemain > 0;
+    var sunFull = state.sun >= 100;
+    els.btnSun.disabled = sunOnCooldown || sunFull;
+    els.sunDesc.textContent = sunOnCooldown ? (Math.ceil(sunRemain/1000) + "초 후 가능") : (sunFull ? "가득 참" : "+22");
+
+    if(els.photoCard){ els.photoCard.hidden = stage !== 5; }
 
     updateHint(stage);
     saveState();
@@ -756,16 +816,20 @@
 
   els.btnWater.addEventListener("click", function(){
     applyDecay();
+    if(Date.now() < state.waterReadyTs || state.water >= 100) return;
     state.water = clamp(state.water + 22, 0, 100);
     state.growth = clamp(state.growth + careBonus(), 0, 100);
+    state.waterReadyTs = Date.now() + WATER_COOLDOWN_MS;
     announce("물을 주었어요.");
     render();
   });
 
   els.btnSun.addEventListener("click", function(){
     applyDecay();
+    if(Date.now() < state.sunReadyTs || state.sun >= 100) return;
     state.sun = clamp(state.sun + 22, 0, 100);
     state.growth = clamp(state.growth + careBonus(), 0, 100);
+    state.sunReadyTs = Date.now() + SUN_COOLDOWN_MS;
     announce("햇빛을 쬐어 주었어요.");
     render();
   });
@@ -777,7 +841,7 @@
     state.water = clamp(state.water - 15, 0, 100);
     state.sun = clamp(state.sun - 15, 0, 100);
     state.growth = clamp(state.growth + 10, 0, 100);
-    state.feedReadyTs = Date.now() + 45000;
+    state.feedReadyTs = Date.now() + FEED_COOLDOWN_MS;
     announce("영양을 주었어요.");
     render();
   });
