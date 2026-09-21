@@ -113,6 +113,7 @@
   }
 
   *{ box-sizing: border-box; }
+  [hidden]{ display: none !important; }
   body{
     margin:0;
     background: var(--bg-canvas);
@@ -139,15 +140,17 @@
     justify-content:space-between;
     gap:16px;
   }
-  .brand{ display:flex; align-items:flex-start; gap:12px; }
-  .brand-mark{
-    width:38px; height:38px; flex:0 0 auto;
-    border-radius:50%;
-    background: linear-gradient(155deg, var(--heather-400), var(--heather-700));
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-logo{
+    flex:0 0 auto;
+    height:40px;
+    padding:6px 10px;
+    border-radius:10px;
+    background: #122A52;
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 3px 10px var(--shadow);
   }
-  .brand-mark svg{ width:20px; height:20px; }
+  .brand-logo img{ height:100%; width:auto; display:block; }
   .brand h1{ font-size: 1.7rem; letter-spacing:.02em; font-weight:600; }
   .brand .subtitle{ margin:2px 0 0; font-size:.82rem; color:var(--ink-soft); letter-spacing:.02em; }
 
@@ -443,11 +446,11 @@
 
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3c2.4 0 4 2.2 4 5.2S14.4 15 12 15s-4-3.6-4-6.8S9.6 3 12 3Z" fill="#fff" opacity=".92"/></svg>
+      <span class="brand-logo">
+        <img src="hanyang-logo.png" alt="한양대학교 로고" />
       </span>
       <div>
-        <h1>ERICA</h1>
+        <h1>ERICA 키우기</h1>
         <p class="subtitle">에리카속(Erica) 화분 가꾸기</p>
       </div>
     </div>
@@ -640,9 +643,9 @@
     btnAddressSearch: $("btnAddressSearch"), giftHint: $("giftHint")
   };
 
-  var WATER_COOLDOWN_MS = 60 * 1000;
-  var SUN_COOLDOWN_MS = 60 * 1000;
-  var FEED_COOLDOWN_MS = 2 * 60 * 1000;
+  var WATER_COOLDOWN_MS = 30 * 1000;
+  var SUN_COOLDOWN_MS = 30 * 1000;
+  var FEED_COOLDOWN_MS = 60 * 1000;
   var GIFT_RECIPIENT_EMAIL = "hseum@hanyang.ac.kr";
 
   function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
